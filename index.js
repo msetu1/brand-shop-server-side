@@ -25,30 +25,49 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
+
 
         const database = client.db("productDB");
         const productCollection = database.collection("product");
 
-        
 
-        app.get('/product' ,async(req ,res ) =>{
+        app.get('/product', async (req, res) => {
             const cursor = productCollection.find({})
             const result = await cursor.toArray()
             res.send(result)
         })
 
-        app.post('/product' , async(req,res) =>{
+        app.post('/product', async (req, res) => {
             const newProducts = req.body
             console.log(newProducts);
             const result = await productCollection.insertOne(newProducts)
             res.send(result)
         })
 
-        app.get('/product/:id',async(req,res)=>{
-            const id =req.params.id;
-            const query ={_id:new ObjectId(id)}
-            const result=await productCollection.findOne(query)
+        app.get('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await productCollection.findOne(query)
+            res.send(result)
+        })
+
+        app.put('/product/:id', async (req, res) => {
+            const id = req.params.id;
+            const filter = { _id: new ObjectId(id) };
+            const option ={upsert:true}
+            const updateProduct = req.body;
+            const product = {
+                $set: {
+                    name: updateProduct.name,
+                    brandName: updateProduct.brandName,
+                    type: updateProduct.type,
+                    rating: updateProduct.rating,
+                    price: updateProduct.price, shortDescription: updateProduct.shortDescription,
+                     img: updateProduct.img
+                }
+            }
+            const result = await productCollection.updateOne(filter,product,option)
             res.send(result)
         })
 
