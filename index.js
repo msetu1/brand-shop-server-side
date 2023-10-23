@@ -25,12 +25,13 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         // Connect the client to the server	(optional starting in v4.7)
-        await client.connect();
+        // await client.connect();
 
 
         const database = client.db("productDB");
         const productCollection = database.collection("product");
 
+        const cartCollection = database.collection('cart')
 
         app.get('/product', async (req, res) => {
             const cursor = productCollection.find({})
@@ -55,7 +56,7 @@ async function run() {
         app.put('/product/:id', async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
-            const option ={upsert:true}
+            const option = { upsert: true }
             const updateProduct = req.body;
             const product = {
                 $set: {
@@ -64,11 +65,32 @@ async function run() {
                     type: updateProduct.type,
                     rating: updateProduct.rating,
                     price: updateProduct.price, shortDescription: updateProduct.shortDescription,
-                     img: updateProduct.img
+                    img: updateProduct.img
                 }
             }
-            const result = await productCollection.updateOne(filter,product,option)
+            const result = await productCollection.updateOne(filter, product, option)
             res.send(result)
+        })
+
+        app.post('/cart', async (req, res) => {
+            const addedProduct = req.body
+            const result = await cartCollection.insertOne(addedProduct)
+            res.send(result)
+            // console.log(result);
+        })
+
+        app.get('/cartproduct', async (req, res) => {
+            const cursor = cartCollection.find({})
+            const result = await cursor.toArray()
+            res.send(result)
+        })
+
+        app.delete('/cart/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: id }
+            const result = await cartCollection.deleteOne(query)
+            res.send(result)
+            console.log(result);
         })
 
         // Send a ping to confirm a successful connection
